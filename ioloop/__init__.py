@@ -20,6 +20,7 @@ class IOLoop(object):
 
     
     _instance_lock = threading.Lock()
+    _current = threading.local()
 
     @staticmethod
     def instance():
@@ -42,12 +43,46 @@ class IOLoop(object):
         if impletement:
             self._impl = impletement
         elif hasattr(select, 'kqueue'):
-            from ioloop.platform.kqueue import KQueueLoop
+            from ioloop.kqueue import KQueueLoop
             self._impl = KQueueLoop
         elif hasattr(select, 'epoll'):
-            from ioloop.platform.epoll import EPollLoop
+            from ioloop.epoll import EPollLoop
             self._impl = EPollLoop
         else:
-            raise NotImplemented()
+            raise NotImplemented('No model')
+
+        self._loop = self._impl()
+
+        self._running = False
+        self._fd_to_handlers = {}
+    
+    def add_handler(self, fd, events, handler):
         
-        self._impl()
+        self._fd_to_handlers[fd] = handler
+        self._loop.register(fd, events)
+
+    def remove_handler(self, fd):
+
+        self._fd_to_handlers.pop(fd)
+        self._loop.unregister(fd)
+
+
+    @staticmethod
+    def current():
+
+        current = getattr(IOLoop._current, 'instance', None)
+        if current is None:
+            return IOLoop.instance()
+        return current
+    
+
+    def start(self):
+
+        if self._running:
+            raise RuntimeError('IOLoop is already running')
+
+        while True:
+            print 'Polling...'
+            for fd, events in self._loop.poll():
+                self._fd_to_handlers[fd](fd, events)
+
