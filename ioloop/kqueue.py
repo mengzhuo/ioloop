@@ -2,7 +2,6 @@
 # encoding: utf-8
 
 import select
-import functools
 from ioloop import READ, WRITE, ERROR
 
 class KQueueLoop(object):
@@ -14,7 +13,7 @@ class KQueueLoop(object):
 
     def register(self, fd, events):
         if fd in self.active:
-            raise IOError('%d in active' % fd)
+            raise IOError('FD: %d in active' % fd)
         self._control(fd, events, select.KQ_EV_ADD)
         self.active[fd] = events
 
@@ -30,15 +29,15 @@ class KQueueLoop(object):
         
         kevents = []
         if events & WRITE:
-            kevents.append([select.kevent(fd,
+            kevents.append(select.kevent(fd,
                                          filter=select.KQ_FILTER_WRITE,
-                                         flags=flags)])
+                                         flags=flags))
         if events & READ:
-            kevents.append([select.kevent(fd,
+            kevents.append(select.kevent(fd,
                                          filter=select.KQ_FILTER_READ,
-                                         flags=flags)])
+                                         flags=flags))
 
-        [self.loop.control(x, 0) for x in kevents]
+        [self.loop.control([x], 0) for x in kevents]
 
     def poll(self, timeout=1):
 
