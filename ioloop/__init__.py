@@ -66,6 +66,9 @@ class IOLoop(object):
         self._fd_to_handlers.pop(fd)
         self._loop.unregister(fd)
 
+    def modify_handler(self, fd, events, handler):
+        self.remove_handler(fd)
+        self.add_handler(fd, events, handler)
 
     @staticmethod
     def current():
@@ -82,7 +85,6 @@ class IOLoop(object):
             raise RuntimeError('IOLoop is already running')
 
         while True:
-            print 'Polling...'
             for fd, events in self._loop.poll():
                 self._fd_to_handlers[fd](fd, events)
 

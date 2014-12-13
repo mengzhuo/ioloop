@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 import socket
-from ioloop import IOLoop, READ, ERROR, WRITE, NONE
+from ioloop import IOLoop, READ, ERROR, WRITE
 
 main_sock_fd = None
 loop = IOLoop()
@@ -13,7 +13,7 @@ buff = ''
 
 def handle_read(fd, events):
     global buff
-    sock = socks[fd]
+    sock = socks[int(fd)]
     data = sock.recv(10)
     print 'Recv:%s' %  data
     sock.send('pikachu\n')
@@ -21,7 +21,7 @@ def handle_read(fd, events):
 
 def handle_write(fd, events):
     global buff
-    sock = socks[fd]
+    sock = socks[int(fd)]
     sock.send(buff)
     buff = ''
 
@@ -33,9 +33,10 @@ def handle_events(fd, events):
         conn, _  = socket.fromfd(fd,
                              socket.AF_INET,
                              socket.SOCK_STREAM).accept()
-        socks[fd] = conn
+        socks[conn.fileno()] = conn
+        print socks
         conn.setblocking(0)
-        loop.add_handler(conn.fileno(), READ|ERROR|WRITE, handle_events)
+        loop.add_handler(conn.fileno(), READ|ERROR, handle_events)
 
     else:
         print "new request %s" % bin(events)
