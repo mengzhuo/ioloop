@@ -7,7 +7,7 @@ from setuptools import setup
 
 setup(
         name='ioloop',
-        version='0.1',
+        version='0.1a',
         url='https://github.com/mengzhuo/ioloop',
         license='MIT',
         author='Meng Zhuo',
