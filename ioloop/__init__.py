@@ -78,13 +78,18 @@ class IOLoop(object):
             return IOLoop.instance()
         return current
     
+    def stop(self):
+
+        self._running = False
+        removed_fds = self._fd_to_handlers.keys()
+        map(self.remove_handler, removed_fds)
 
     def start(self):
 
         if self._running:
             raise RuntimeError('IOLoop is already running')
 
-        while True:
+        while self._running:
             for fd, events in self._loop.poll():
                 self._fd_to_handlers[fd](fd, events)
 
